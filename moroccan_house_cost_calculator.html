@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>حاسبة تكلفة بناء منزل مغربي</title>
+  <style>
+    body { font-family: Tahoma, sans-serif; background: #f9f9f9; padding: 20px; direction: rtl; }
+    .container { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 1000px; margin: auto; }
+    h2, h3 { color: #444; }
+    label { font-weight: bold; }
+    input, button { padding: 10px; margin: 8px 0; width: 100%; box-sizing: border-box; }
+    button { background-color: #4CAF50; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
+    button:hover { background-color: #388E3C; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background-color: #f0f0f0; }
+    .section-title { background-color: #e8f5e9; font-weight: bold; font-size: 16px; color: #2e7d32; padding: 8px; border-radius: 6px; margin-top: 15px; }
+    .floor-total { background-color: #fffde7; font-weight: bold; color: #333; margin: 5px 0; padding: 6px; border-radius: 5px; }
+    .final-total { background-color: #ffebee; font-weight: bold; font-size: 18px; color: #c62828; padding: 12px; margin-top: 20px; border-radius: 10px; text-align: center; }
+    .house-type { background-color: #ede7f6; color: #512da8; font-weight: bold; padding: 10px; margin: 15px 0; border-radius: 8px; text-align: center; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h2>حاسبة تكلفة بناء منزل (المغرب)</h2>
+
+  <label>مساحة المنزل (متر مربع):</label>
+  <input type="number" id="area" value="100" min="20">
+
+  <label>عدد الطوابق (بدون السطح):</label>
+  <input type="number" id="stories" value="3" min="1">
+
+  <button onclick="calculateCost()">احسب التكلفة</button>
+
+  <div id="result"></div>
+</div>
+
+<script>
+const baseData = {
+  "الأساسات": [
+    { item: "حفر الأساسات", unitPrice: 2500, baseQty: 1 },
+    { item: "الحجر (للبلوكاج)", unitPrice: 120, baseQty: 25 },
+    { item: "الكياس", unitPrice: 140, baseQty: 25 },
+    { item: "الرمل", unitPrice: 240, baseQty: 25 },
+    { item: "الأسمنت (35)", unitPrice: 75, baseQty: 20 },
+    { item: "الأسمنت (45)", unitPrice: 78, baseQty: 80 },
+    { item: "الحديد (6 مم)", unitPrice: 920, baseQty: 2 },
+    { item: "الحديد (12-10-14 مم)", unitPrice: 900, baseQty: 8 },
+    { item: "السلك والمسامير", unitPrice: 16, baseQty: 40 },
+    { item: "أنابيب PVC (200)", unitPrice: 20, baseQty: 60 },
+    { item: "اليد العاملة", unitPrice: 125, baseQty: 80 }
+  ],
+  "طابق": [
+    { item: "الحديد (6 مم)", unitPrice: 920, baseQty: 2 },
+    { item: "الحديد (12-10-14 مم)", unitPrice: 900, baseQty: 11 },
+    { item: "الأسمنت (35)", unitPrice: 75, baseQty: 60 },
+    { item: "الأسمنت (45)", unitPrice: 78, baseQty: 100 },
+    { item: "الياجور (8)", unitPrice: 2.5, baseQty: 1200 },
+    { item: "الكياس", unitPrice: 140, baseQty: 25 },
+    { item: "الرمل", unitPrice: 240, baseQty: 25 },
+    { item: "الياجور (12)", unitPrice: 3, baseQty: 2400 },
+    { item: "الوردي والبودر والشبكة", unitPrice: 85, baseQty: 85 },
+    { item: "الماء والكهرباء (يد عاملة)", unitPrice: 30, baseQty: 85 },
+    { item: "الماء والكهرباء (مواد)", unitPrice: 53, baseQty: 85 },
+    { item: "اليد العاملة", unitPrice: 250, baseQty: 85 }
+  ],
+  "السطح وبيت الدرج": [
+    { item: "الحديد", unitPrice: 900, baseQty: 4 },
+    { item: "الرمل", unitPrice: 240, baseQty: 12.5 },
+    { item: "الياجور (12)", unitPrice: 3, baseQty: 1200 },
+    { item: "الأسمنت (45)", unitPrice: 78, baseQty: 45 },
+    { item: "اليد العاملة", unitPrice: 250, baseQty: 40 }
+  ]
+};
+
+function calculateCost() {
+  const area = parseFloat(document.getElementById('area').value);
+  const stories = parseInt(document.getElementById('stories').value);
+  let html = `<div class="house-type">هذا منزل من نوع R+${stories}</div>`;
+  let grandTotal = 0;
+  let floorBreakdown = [];
+
+  // الأساسات
+  html += generateSection("الأساسات", area, baseData["الأساسات"], floorBreakdown);
+
+  // الطابق الأرضي
+  html += generateSection("الطابق الأرضي", area, baseData["طابق"], floorBreakdown);
+
+  // الطوابق العليا
+  const floorLabels = ["الطابق الأول", "الطابق الثاني", "الطابق الثالث", "الطابق الرابع", "الطابق الخامس"];
+  for (let i = 0; i < stories - 1; i++) {
+    if (i < floorLabels.length) {
+      html += generateSection(floorLabels[i], area, baseData["طابق"], floorBreakdown);
+    } else {
+      html += generateSection(`طابق إضافي ${i + 1}`, area, baseData["طابق"], floorBreakdown);
+    }
+  }
+
+  // السطح
+  html += generateSection("السطح وبيت الدرج", area, baseData["السطح وبيت الدرج"], floorBreakdown);
+
+  // المجموع النهائي
+  floorBreakdown.forEach(({ name, total }) => {
+    html += `<div class="floor-total">${name} = ${total.toLocaleString()} درهم</div>`;
+    grandTotal += total;
+  });
+
+  html += `<div class="final-total">المجموع النهائي = ${grandTotal.toLocaleString()} درهم مغربي</div>`;
+
+  document.getElementById('result').innerHTML = html;
+}
+
+function generateSection(name, area, items, floorBreakdown) {
+  let html = `<div class="section-title">${name}</div><table><tr><th>البند</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>`;
+  let sectionTotal = 0;
+
+  items.forEach(({ item, unitPrice, baseQty }) => {
+    const qty = (baseQty * area) / 80;
+    const total = Math.round(qty * unitPrice);
+    sectionTotal += total;
+    html += `<tr><td>${item}</td><td>${qty.toFixed(2)}</td><td>${unitPrice}</td><td>${total.toLocaleString()} درهم</td></tr>`;
+  });
+
+  html += `<tr><td colspan="3"><b>المجموع الفرعي - ${name}</b></td><td>${sectionTotal.toLocaleString()} درهم</td></tr></table>`;
+  floorBreakdown.push({ name, total: sectionTotal });
+
+  return html;
+}
+
+
+// Disable right click and some keys to deter casual copying
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if (
+    e.key === "F12" ||
+    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C' || e.key === 'J')) ||
+    (e.ctrlKey && e.key === 'U')
+  ) {
+    e.preventDefault();
+  }
+});
+</script>
+</body>
+</html>
